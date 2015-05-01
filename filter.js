@@ -28,7 +28,6 @@ var timeNow = function() {
 
 // get todays date and split it up
 var today = new Date()
-today = today
 year = today.getFullYear();
 month = leadZero(today.getMonth().toString());
 day = leadZero(today.getDay().toString());
