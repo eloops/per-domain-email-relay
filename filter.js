@@ -11,14 +11,33 @@
 // alternate for logging:
 // emailrelay.exe -n -l -s E:\emailrelay\spool -z "c:\windows\system32\cscript.exe //nologo E:\emailrelay\filter.js" -r -v >> E:\emailrelay\log\emailrelay.log 2>&1
 
-// TBD: Date stamping of log files
+// function add a single leading zero to date strings.
+var leadZero = function(dobj) {
+  var stringObj = dobj + '';
+  if (stringObj.length == 1) {
+    stringObj = '0' + stringObj;
+  }
+  return stringObj;
+}
 
+var timeNow = function() {
+  var now = new Date() ;
+  now = now.toTimeString().split(" ") ;
+  return now[0] ;
+}
+
+// get todays date and split it up
+var today = new Date()
+today = today
+year = today.getFullYear();
+month = leadZero(today.getMonth().toString());
+day = leadZero(today.getDay().toString());
 
 // Constants
 var validDomains = ['domain1.com','domain2.com','domain3.com'] ;
 var sm = "E:\\emailrelay\\msmtp.exe"
 var confDir = "E:\\emailrelay\\conf"
-var logfile = "E:\\emailrelay\\log\\filter.log"
+var logfile = "E:\\emailrelay\\log\\filter-" + year + "-" + month + "-" + day + ".log"
 var ret = new RegExp( "MailRelay-To-Remote:\s?.*@\(.*\)" ) ;
 // var ref = new RegExp( "MailRelay-From:\s?.*@\(.*\)" ) ;
 var strCmd = "%comspec% /c " + sm + " -C " + confDir + "\\"
@@ -54,7 +73,7 @@ var tdom = e.match(ret)[1] ;
 // replace carriage returns (CR & LF)
 tdom = tdom.replace("\r", "") ;
 tdom = tdom.replace("\n", "") ;
-lf.WriteLine("filter.js: info: Detected domain is " + tdom) ;
+lf.WriteLine(timeNow() + " filter.js:    info: Detected domain is " + tdom) ;
 // fdom = fdom.replace("\r", "") ;
 // fdom = fdom.replace("\n", "") ;
 
@@ -69,7 +88,7 @@ for ( var a = 0; a < validDomains.length; a++ ) {
     // create the shell & exec objects
     var sh = WScript.CreateObject( "Wscript.Shell" ) ;
     var oExec = sh.Exec(strCmd) ;
-    lf.WriteLine("msmtp: info: Email Send: " + content + " to " + tdom) ;
+    lf.WriteLine(timeNow() + " msmtp:        info: Email Send: " + content + " to " + tdom) ;
     
     // actually run the command and wait for it to finish
     while (oExec.Status === 0) ; {
@@ -77,12 +96,12 @@ for ( var a = 0; a < validDomains.length; a++ ) {
     } ;
     // if there was an error, log the code & reason then drop back to emailrelay
     if (oExec.ExitCode != 0) {
-      lf.Write("msmtp: error: returned with exit code " + oExec.ExitCode + ": " + exitCodes[oExec.ExitCode.toString()]) ;
+      lf.WriteLine(timeNow() + " msmtp:       error: returned with exit code " + oExec.ExitCode + ": " + exitCodes[oExec.ExitCode.toString()]) ;
       lf.close() ;
       WScript.Quit( 1 ) ;
     } else {
       // if there was no errors from msmtp, delete files and return with 100 code to emailrelay
-      lf.WriteLine("msmtp: info: Deleting files and returning successfully to script.") ;
+      lf.WriteLine(timeNow() + " msmtp:        info: Deleting files and returning successfully to script.") ;
       if (fs.FileExists(content)) {
         fs.DeleteFile(content) ;
       }
@@ -95,6 +114,10 @@ for ( var a = 0; a < validDomains.length; a++ ) {
       lf.close() ;
       WScript.Quit( 100 ) ;
     } ;
+  } else {
+    lf.WriteLine(timeNow() + " filter.js: warning: No valid domains found, moving to exception folder & returning.");
+    lf.close() ;
+    WScript.Quit( 0 ) ;
   } ;
 } ;
 // close up logfile and quit back to emailrelay if nothing else has happened
