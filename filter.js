@@ -42,7 +42,23 @@ var ret = new RegExp( "MailRelay-To-Remote:\s?.*@\(.*\)" ) ;
 var strCmd = "%comspec% /c " + sm + " -C " + confDir + "\\"
 
 var exitCodes = new Array() ;
-exitCodes = {"64" : "Incorrect usage.", "65" : "Something wrong with email input.", "66" : "Input file not read or doesn't exist", "67" : "Specified user is invalid.", "68" : "Specified host does not exist.", "69" : "Service unavailable. Or, something else went wrong.", "70" : "Internal software error occurred." , "71" : "OS error occurred.", "72" : "System file cannot be opened. Possibly syntax error.", "73" : "Unable to create specified file.", "74" : "Error occurred while performing I/O on a file.", "75" : "Temp error. Or, mailer could not create a connection.", "76" : "Handshake produced something impossible.", "77" : "No permission to perform operation.", "78" : "Something wasn't configured correctly."} ;
+exitCodes = {
+  "64" : "Incorrect usage.",
+  "65" : "Something wrong with email input.",
+  "66" : "Input file not read or doesn't exist",
+  "67" : "Specified user is invalid.",
+  "68" : "Specified host does not exist.",
+  "69" : "Service unavailable. Or, something else went wrong.",
+  "70" : "Internal software error occurred.",
+  "71" : "OS error occurred.",
+  "72" : "System file cannot be opened. Possibly syntax error.",
+  "73" : "Unable to create specified file.",
+  "74" : "Error occurred while performing I/O on a file.",
+  "75" : "Temp error. Or, mailer could not create a connection.",
+  "76" : "Handshake produced something impossible.",
+  "77" : "No permission to perform operation.", 
+  "78" : "Something wasn't configured correctly."
+} ;
 
 var fs = WScript.CreateObject("Scripting.FileSystemObject") ; 
 
