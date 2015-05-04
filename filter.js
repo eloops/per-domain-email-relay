@@ -34,9 +34,11 @@ day = leadZero(today.getDay().toString());
 
 // Constants
 var validDomains = ['domain1.com','domain2.com','domain3.com'] ;
-var sm = "E:\\emailrelay\\msmtp.exe"
-var confDir = "E:\\emailrelay\\conf"
-var logfile = "E:\\emailrelay\\log\\filter-" + year + "-" + month + "-" + day + ".log"
+var baseDir = "E:\\emailrelay" ;
+var sm = baseDir + "\\msmtp.exe" ;
+var confDir = baseDir + "\\conf" ;
+var faultDir = baseDir + "\\faulted\\" ;
+var logfile = baseDir + "\\log\\filter-" + year + "-" + month + "-" + day + ".log"
 var ret = new RegExp( "MailRelay-To-Remote:\s?.*@\(.*\)" ) ;
 // var ref = new RegExp( "MailRelay-From:\s?.*@\(.*\)" ) ;
 var strCmd = "%comspec% /c " + sm + " -C " + confDir + "\\"
@@ -131,8 +133,17 @@ for ( var a = 0; a < validDomains.length; a++ ) {
     } ;
   } else {
     lf.WriteLine(timeNow() + " filter.js: warning: No valid domains found, moving to exception folder & returning.");
+    if (fs.FileExists(content)) {
+      fs.MoveFile(content, faultDir) ;
+    }
+    if (fs.FileExists(envelope)) {
+      fs.MoveFile(envelope, faultDir) ;
+    }
+    if (fs.FileExists(envNew)) {
+      fs.MoveFile(envNew, faultDir) ;
+    }
     lf.close() ;
-    WScript.Quit( 0 ) ;
+    WScript.Quit( 65 ) ;
   } ;
 } ;
 // close up logfile and quit back to emailrelay if nothing else has happened
