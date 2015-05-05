@@ -33,15 +33,16 @@ month = leadZero(today.getMonth().toString());
 day = leadZero(today.getDay().toString());
 
 // Constants
-var validDomains = ['domain1.com','domain2.com','domain3.com'] ;
-var baseDir = "E:\\emailrelay" ;
+var validDomains = ["domain1.com","domain2.com","domain3.com"] ;
+var baseDir = "C:\\emailrelay" ;
 var sm = baseDir + "\\msmtp.exe" ;
 var confDir = baseDir + "\\conf" ;
 var faultDir = baseDir + "\\faulted\\" ;
 var logfile = baseDir + "\\log\\filter-" + year + "-" + month + "-" + day + ".log"
-var ret = new RegExp( "MailRelay-To-Remote:\s?.*@\(.*\)" ) ;
+var ret = new RegExp( "MailRelay-To-Remote:\s?\(.*\)@\(.*\)" ) ;
 // var ref = new RegExp( "MailRelay-From:\s?.*@\(.*\)" ) ;
 var strCmd = "%comspec% /c " + sm + " -C " + confDir + "\\"
+var match = false ;
 
 var exitCodes = new Array() ;
 exitCodes = {
@@ -84,28 +85,29 @@ var e = ts.ReadAll() ;
 ts.Close() ;
 
 // Grab the domain of the To address from the envelope
-var tdom = e.match(ret)[1] ;
+var tdom = e.match(ret) ;
 // var fdom = e.match(ref)[1] ;
 
-// replace carriage returns (CR & LF)
-tdom = tdom.replace("\r", "") ;
-tdom = tdom.replace("\n", "") ;
-lf.WriteLine(timeNow() + " filter.js:    info: Detected domain is " + tdom) ;
+// replace carriage returns (CR & LF) & spaces in username
+tdom[1] = tdom[1].replace(" ", "") ;
+tdom[2] = tdom[2].replace("\r", "") ;
+tdom[2] = tdom[2].replace("\n", "") ;
+lf.WriteLine(timeNow() + " filter.js:    info: Detected email is " + tdom[1] + "@" + tdom[2]) ;
 // fdom = fdom.replace("\r", "") ;
 // fdom = fdom.replace("\n", "") ;
 
 // go through list of domains to see if detected matches
 for ( var a = 0; a < validDomains.length; a++ ) {
   // if it does (extra is in case we want to compare to/from domains as well)
-  if ( tdom === validDomains[a] /* && tdom === fdom */ ) {
-    
+  if ( tdom[2] === validDomains[a] /* && tdom === fdom */ ) {
+    match = true ;
     // build our command to be executed
-    var strCmd = strCmd + tdom + ".conf -t < " + content ;
+    var strCmd = strCmd + tdom[2] + ".conf -t < " + content ;  // -f " + validFroms[tdom] + "
     
     // create the shell & exec objects
     var sh = WScript.CreateObject( "Wscript.Shell" ) ;
     var oExec = sh.Exec(strCmd) ;
-    lf.WriteLine(timeNow() + " msmtp:        info: Email Send: " + content + " to " + tdom) ;
+    lf.WriteLine(timeNow() + " msmtp:        info: Email Send: " + content + " to " + tdom[1] + "@" + tdom[2]) ;
     
     // actually run the command and wait for it to finish
     while (oExec.Status === 0) ; {
@@ -132,19 +134,23 @@ for ( var a = 0; a < validDomains.length; a++ ) {
       WScript.Quit( 100 ) ;
     } ;
   } else {
-    lf.WriteLine(timeNow() + " filter.js: warning: No valid domains found, moving to exception folder & returning.");
-    if (fs.FileExists(content)) {
-      fs.MoveFile(content, faultDir) ;
-    }
-    if (fs.FileExists(envelope)) {
-      fs.MoveFile(envelope, faultDir) ;
-    }
-    if (fs.FileExists(envNew)) {
-      fs.MoveFile(envNew, faultDir) ;
-    }
-    lf.close() ;
-    WScript.Quit( 65 ) ;
+    continue ;
   } ;
+} ;
+// if there were no valid matches, move the files to the faulted folder and return with an appropriate fc
+if (!match) {
+  lf.WriteLine(timeNow() + " filter.js: warning: No valid domains found, moving to exception folder & returning.");
+  if (fs.FileExists(content)) {
+    fs.MoveFile(content, faultDir) ;
+  }
+  if (fs.FileExists(envelope)) {
+    fs.MoveFile(envelope, faultDir) ;
+  }
+  if (fs.FileExists(envNew)) {
+    fs.MoveFile(envNew, faultDir) ;
+  }
+  lf.close() ;
+  WScript.Quit( 65 ) ;
 } ;
 // close up logfile and quit back to emailrelay if nothing else has happened
 lf.close()
