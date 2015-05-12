@@ -29,8 +29,8 @@ var timeNow = function() {
 // get todays date and split it up
 var today = new Date()
 year = today.getFullYear();
-month = leadZero(today.getMonth().toString());
-day = leadZero(today.getDay().toString());
+month = leadZero(today.getMonth() + 1;
+day = leadZero(today.getDate();
 
 // Constants
 var validDomains = ["domain1.com","domain2.com","domain3.com"] ;
